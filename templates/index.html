@@ -98,11 +98,11 @@
         // Initialize gauges
         const threshold = 80;
         const gradientSteps = [
-            { range: [0, 20], color: "#1f77b4" },
-            { range: [20, 40], color: "#4682b4" },
-            { range: [40, 60], color: "#6a5acd" },
-            { range: [60, 80], color: "#da70d6" },
-            { range: [80, 100], color: "#ff69b4" }
+            { range: [0, 20], color: "#00aaff" },
+            { range: [20, 40], color: "#4dcfff" },
+            { range: [40, 60], color: "#9a7dff" },
+            { range: [60, 80], color: "#ff85f4" },
+            { range: [80, 100], color: "#ff4db8" }
         ];
 
         function createGaugeLayout(title) {
@@ -114,6 +114,17 @@
             };
         }
 
+        // Function to get the color based on the value and gradient steps
+        function getColorForValue(value, steps) {
+            for (const step of steps) {
+                if (value >= step.range[0] && value <= step.range[1]) {
+                    return step.color;
+                }
+            }
+            return '#ffffff'; // Default color if no range matches
+        }
+
+
         // Initial gauge setup
         Plotly.newPlot('cpu-gauge', [{
             type: "indicator",
@@ -121,13 +132,18 @@
             value: 0,
             gauge: {
                 axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
-                bar: { color: "#b0b0b0" },
+                bar: { color: "rgba(255, 255, 255, 0.5)", thickness: 0.69 },
                 bgcolor: "#4a4a4a",
                 steps: gradientSteps,
                 threshold: {
                     line: { color: "#ff0000", width: 4 },
                     thickness: 0.75,
                     value: threshold
+                }
+            },
+            number: {
+                font: {
+                    color: '#ffffff' // Initial color, will be updated
                 }
             }
         }], createGaugeLayout("CPU Utilization (%)"));
@@ -138,13 +154,18 @@
             value: 0,
             gauge: {
                 axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
-                bar: { color: "#b0b0b0" },
+                bar: { color: "rgba(255, 255, 255, 0.5)", thickness: 0.69 },
                 bgcolor: "#4a4a4a",
                 steps: gradientSteps,
                 threshold: {
                     line: { color: "#ff0000", width: 4 },
                     thickness: 0.75,
                     value: threshold
+                }
+            },
+            number: {
+                font: {
+                    color: '#ffffff' // Initial color, will be updated
                 }
             }
         }], createGaugeLayout("Memory Utilization (%)"));
@@ -154,9 +175,20 @@
             fetch('/metrics')
                 .then(response => response.json())
                 .then(data => {
-                    // Update gauges
-                    Plotly.update('cpu-gauge', { value: [data.cpu] });
-                    Plotly.update('mem-gauge', { value: [data.memory] });
+                    // Determine colors based on current values
+                    const cpuColor = getColorForValue(data.cpu, gradientSteps);
+                    const memColor = getColorForValue(data.memory, gradientSteps);
+
+                    // Update gauges with new values and colors
+                    Plotly.update('cpu-gauge', {
+                        value: [data.cpu],
+                        'number.font.color': cpuColor
+                    });
+                    Plotly.update('mem-gauge', {
+                        value: [data.memory],
+                        'number.font.color': memColor
+                    });
+
 
                     // Update alert
                     const alertContainer = document.getElementById('alert-container');
