@@ -6,55 +6,69 @@
     <title>System Monitoring</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
+        /* Dark theme for the body */
         body {
             background-color: #1e1e1e;
-            color: #f0f0f0;
-            font-family: sans-serif;
+            color: #f0f0f0; /* Light text color */
+            font-family: sans-serif; /* Use a common font */
             margin: 0;
             padding: 20px;
         }
 
+        /* Styling for the main container */
         .container {
             max-width: 800px;
             margin: 20px auto;
             padding: 20px;
-            background-color: #2d2d2d;
+            background-color: #2d2d2d; /* Slightly lighter dark background for container */
             border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* More prominent shadow for dark theme */
             text-align: center;
         }
 
         h1 {
-            color: #ffffff;
+            color: #ffffff; /* White color for the main title */
             margin-bottom: 20px;
         }
 
         h2 {
-            color: #cccccc;
+            color: #cccccc; /* Lighter grey for gauge titles */
             margin-top: 0;
         }
 
+        /* Styling for the gauge containers */
         .gauge-container {
             margin: 20px auto;
-            width: 80%;
-            background-color: #3c3c3c;
+            width: 80%; /* Increased width for better visibility in dark theme */
+            background-color: #3c3c3c; /* Dark background for gauge sections */
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
         }
 
+        /* Container for the alert to allow centering */
+        #alert-container {
+            display: flex; /* Use flexbox to center content */
+            justify-content: center; /* Center horizontally */
+            margin-bottom: 20px; /* Space below the alert */
+        }
+
+        /* Elegant, minimal, modern alert styling */
         .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-            text-align: left;
+            padding: 15px 25px; /* Adjusted padding */
+            border: none; /* Removed default border */
+            border-radius: 6px; /* Slightly more rounded corners */
+            text-align: center; /* Center text within the alert */
+            max-width: 90%; /* Limit maximum width */
+            width: fit-content; /* Shrink to fit content */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Subtle shadow */
+            font-size: 1em; /* Standard font size */
+            line-height: 1.5; /* Improved readability */
         }
 
         .alert-danger {
-            color: #ffcccc;
-            background-color: #5a2d2d;
-            border-color: #7a3d3d;
+            color: #ffdddd; /* Lighter red text for contrast */
+            background-color: #4a2a2a; /* Darker, muted red background */
         }
 
         .gauge-container .plotly-graph-div {
@@ -66,14 +80,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>System Monitoring</h1>
-
-        {% if message %}
-        <div class="alert alert-danger">{{ message }}</div>
-        {% endif %}
+        <h1>Real-Time System Monitoring</h1>
+        <div id="alert-container"></div>
 
         <div class="gauge-container">
-             <h2>CPU Utilization</h2>
+            <h2>CPU Utilization</h2>
             <div id="cpu-gauge"></div>
         </div>
 
@@ -81,86 +92,93 @@
             <h2>Memory Utilization</h2>
             <div id="mem-gauge"></div>
         </div>
-
     </div>
-    <script>
-        // Access data passed from Flask
-        var cpuThreshold = {{ cpu_threshold }};
-        var memThreshold = {{ mem_threshold }};
-        var cpuMetric = {{ cpu_percent }};
-        var memMetric = {{ mem_percent }};
 
-        // Define gradient steps colors (Blue to Pink transition)
-        var gradientStepsColors = [
-            { range: [0, 20], color: "#1f77b4" },    // Blue
-            { range: [20, 40], color: "#4682b4" },    // Steel Blue
-            { range: [40, 60], color: "#6a5acd" },    // Slate Blue
-            { range: [60, 80], color: "#da70d6" },    // Orchid
-            { range: [80, 100], color: "#ff69b4" }   // Hot Pink
+    <script>
+        // Initialize gauges
+        const threshold = 80;
+        const gradientSteps = [
+            { range: [0, 20], color: "#1f77b4" },
+            { range: [20, 40], color: "#4682b4" },
+            { range: [40, 60], color: "#6a5acd" },
+            { range: [60, 80], color: "#da70d6" },
+            { range: [80, 100], color: "#ff69b4" }
         ];
 
+        function createGaugeLayout(title) {
+            return {
+                title: { text: title, font: { color: '#ffffff' } },
+                margin: { t: 50, b: 0, l: 20, r: 20 },
+                paper_bgcolor: "#2d2d2d",
+                plot_bgcolor: "#2d2d2d"
+            };
+        }
 
-        var cpuGauge = {
+        // Initial gauge setup
+        Plotly.newPlot('cpu-gauge', [{
             type: "indicator",
             mode: "gauge+number",
-            value: parseFloat(cpuMetric),
+            value: 0,
             gauge: {
                 axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
                 bar: { color: "#b0b0b0" },
                 bgcolor: "#4a4a4a",
-                borderwidth: 0,
-                
-                bordercolor: "#ccc",
-                steps: gradientStepsColors,
+                steps: gradientSteps,
                 threshold: {
                     line: { color: "#ff0000", width: 4 },
                     thickness: 0.75,
-                    value: cpuThreshold
+                    value: threshold
                 }
             }
-        };
+        }], createGaugeLayout("CPU Utilization (%)"));
 
-        var memGauge = {
+        Plotly.newPlot('mem-gauge', [{
             type: "indicator",
             mode: "gauge+number",
-            value: parseFloat(memMetric),
+            value: 0,
             gauge: {
                 axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
                 bar: { color: "#b0b0b0" },
                 bgcolor: "#4a4a4a",
-                borderwidth: 0,
-                
-                bordercolor: "#ccc",
-                steps: gradientStepsColors,
+                steps: gradientSteps,
                 threshold: {
                     line: { color: "#ff0000", width: 4 },
                     thickness: 0.75,
-                    value: memThreshold
+                    value: threshold
                 }
             }
-        };
+        }], createGaugeLayout("Memory Utilization (%)"));
 
-        var cpuGaugeLayout = {
-            title: {
-                text: "CPU Utilization (%)",
-                font: { color: '#ffffff' }
-            },
-            margin: { t: 50, b: 0, l: 20, r: 20 },
-            paper_bgcolor: "#2d2d2d",
-            plot_bgcolor: "#2d2d2d"
-        };
-        var memGaugeLayout = {
-            title: {
-                 text: "Memory Utilization (%)",
-                 font: { color: '#ffffff' }
-            },
-            margin: { t: 50, b: 0, l: 20, r: 20 },
-             paper_bgcolor: "#2d2d2d",
-            plot_bgcolor: "#2d2d2d"
-        };
+        // Real-time updates
+        function updateMetrics() {
+            fetch('/metrics')
+                .then(response => response.json())
+                .then(data => {
+                    // Update gauges
+                    Plotly.update('cpu-gauge', { value: [data.cpu] });
+                    Plotly.update('mem-gauge', { value: [data.memory] });
 
-        Plotly.newPlot('cpu-gauge', [cpuGauge], cpuGaugeLayout);
-        Plotly.newPlot('mem-gauge', [memGauge], memGaugeLayout);
+                    // Update alert
+                    const alertContainer = document.getElementById('alert-container');
+                    if (data.cpu > threshold || data.memory > threshold) {
+                        alertContainer.innerHTML = `
+                            <div class="alert alert-danger">
+                                High utilization detected!<br>
+                                CPU: ${data.cpu.toFixed(1)}%<br>
+                                Memory: ${data.memory.toFixed(1)}%
+                            </div>
+                        `;
+                    } else {
+                        alertContainer.innerHTML = '';
+                    }
+                })
+                .catch(error => console.error('Error fetching metrics:', error));
+        }
+
+        // Update every second
+        setInterval(updateMetrics, 1000);
+        // Initial update
+        updateMetrics();
     </script>
 </body>
 </html>
