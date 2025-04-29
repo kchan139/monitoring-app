@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitoring</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #cccccc;
+            margin-top: 0;
+        }
+
+        .gauge-container {
+            margin: 20px auto;
+            width: 80%;
+            background-color: #3c3c3c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            text-align: left;
+        }
+
+        .alert-danger {
+            color: #ffcccc;
+            background-color: #5a2d2d;
+            border-color: #7a3d3d;
+        }
+
+        .gauge-container .plotly-graph-div {
+            margin: auto;
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Monitoring</h1>
+
+        {% if message %}
+        <div class="alert alert-danger">{{ message }}</div>
+        {% endif %}
+
+        <div class="gauge-container">
+             <h2>CPU Utilization</h2>
+            <div id="cpu-gauge"></div>
+        </div>
+
+        <div class="gauge-container">
+            <h2>Memory Utilization</h2>
+            <div id="mem-gauge"></div>
+        </div>
+
+    </div>
+    <script>
+        // Access data passed from Flask
+        var cpuThreshold = {{ cpu_threshold }};
+        var memThreshold = {{ mem_threshold }};
+        var cpuMetric = {{ cpu_percent }};
+        var memMetric = {{ mem_percent }};
+
+        // Define gradient steps colors (Blue to Pink transition)
+        var gradientStepsColors = [
+            { range: [0, 20], color: "#1f77b4" },    // Blue
+            { range: [20, 40], color: "#4682b4" },    // Steel Blue
+            { range: [40, 60], color: "#6a5acd" },    // Slate Blue
+            { range: [60, 80], color: "#da70d6" },    // Orchid
+            { range: [80, 100], color: "#ff69b4" }   // Hot Pink
+        ];
+
+
+        var cpuGauge = {
+            type: "indicator",
+            mode: "gauge+number",
+            value: parseFloat(cpuMetric),
+            gauge: {
+                axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
+                bar: { color: "#b0b0b0" },
+                bgcolor: "#4a4a4a",
+                borderwidth: 0,
+                
+                bordercolor: "#ccc",
+                steps: gradientStepsColors,
+                threshold: {
+                    line: { color: "#ff0000", width: 4 },
+                    thickness: 0.75,
+                    value: cpuThreshold
+                }
+            }
+        };
+
+        var memGauge = {
+            type: "indicator",
+            mode: "gauge+number",
+            value: parseFloat(memMetric),
+            gauge: {
+                axis: { range: [null, 100], tickwidth: 1, tickcolor: "#cccccc" },
+                bar: { color: "#b0b0b0" },
+                bgcolor: "#4a4a4a",
+                borderwidth: 0,
+                
+                bordercolor: "#ccc",
+                steps: gradientStepsColors,
+                threshold: {
+                    line: { color: "#ff0000", width: 4 },
+                    thickness: 0.75,
+                    value: memThreshold
+                }
+            }
+        };
+
+        var cpuGaugeLayout = {
+            title: {
+                text: "CPU Utilization (%)",
+                font: { color: '#ffffff' }
+            },
+            margin: { t: 50, b: 0, l: 20, r: 20 },
+            paper_bgcolor: "#2d2d2d",
+            plot_bgcolor: "#2d2d2d"
+        };
+        var memGaugeLayout = {
+            title: {
+                 text: "Memory Utilization (%)",
+                 font: { color: '#ffffff' }
+            },
+            margin: { t: 50, b: 0, l: 20, r: 20 },
+             paper_bgcolor: "#2d2d2d",
+            plot_bgcolor: "#2d2d2d"
+        };
+
+        Plotly.newPlot('cpu-gauge', [cpuGauge], cpuGaugeLayout);
+        Plotly.newPlot('mem-gauge', [memGauge], memGaugeLayout);
+    </script>
+</body>
+</html>
