@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: monitoring-app
-        image: ${IMAGE_URI}
+        image: 061051242980.dkr.ecr.us-east-1.amazonaws.com/monitoring-app:latest
         ports:
         - containerPort: 8080
       imagePullSecrets:
