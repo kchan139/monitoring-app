@@ -1,3 +1,7 @@
+"""
+This script creates an Amazon ECR repository and should only be run once.
+"""
+
 import boto3
 
 ecr_client = boto3.client('ecr')
